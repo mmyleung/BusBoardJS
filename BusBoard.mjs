@@ -7,6 +7,6 @@ async function fetchLiveArrivals() {
 
 const arrivalData = await fetchLiveArrivals()
     arrivalData.sort((a, b) => a.timeToStation - b.timeToStation);
-    arrivalData.map(arrival => 
+    arrivalData.slice(0, 5).map(arrival => 
     console.log(`Bus ${arrival.lineName} to ${arrival.towards} arriving in ${arrival.timeToStation}`))
 
