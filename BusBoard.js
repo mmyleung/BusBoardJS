@@ -3,6 +3,7 @@ import promptSync from 'prompt-sync';
 const prompt = promptSync();
 
 let postCode = prompt("Which postcode would you like to search for?");
+let requireJourneyPlan = prompt("Do you need directions to the bus stop?");
 
 async function fetchLatLon(postcode) {
     const response = await fetch(`https://api.postcodes.io/postcodes/${postcode}`)
@@ -38,10 +39,22 @@ if(latLonData.status === 404) {
         stopPointIds.map(async (id) => {
             const arrivalData = await fetchLiveArrivals(id);
             console.log(`${arrivalData[0].stationName} (${arrivalData[0].platformName})`);
+            console.log(arrivalData[0].naptanId);
             if (!arrivalData) {
                 console.log("Sorry there are no buses arriving")
             } else {
                 arrivalData.sort((a, b) => a.timeToStation - b.timeToStation);
+                if (requireJourneyPlan.toLowerCase() === "yes") {
+                    const response = await fetch(`https://api.tfl.gov.uk/Journey/JourneyResults/${postCode}/to/${id}?timeIs=Arriving&journeyPreference=LeastInterchange&mode=bus&accessibilityPreference=NoRequirements&walkingSpeed=Slow&cyclePreference=None&bikeProficiency=Easy`)
+                    const data = await response.json()
+                    data.journeys.map((journey) => {
+                        journey.legs.map((leg) => {
+                            leg.instruction.steps.map((step) => {
+                                console.log(step.descriptionHeading, step.description);
+                            })
+                        })
+                    })
+                }
                 arrivalData.slice(0, 5).map(arrival => 
                 console.log(`Bus ${arrival.lineName} to ${arrival.towards} arriving in ${arrival.timeToStation}`))
             }      
@@ -49,6 +62,8 @@ if(latLonData.status === 404) {
     }
     
 }
+
+
 
 
 
